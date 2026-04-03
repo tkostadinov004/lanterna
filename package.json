@@ -1,0 +1,28 @@
+{
+  "name": "prhood",
+  "version": "1.0.0",
+  "description": "Google Slides presentation scraper",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tkostadinov004/prhood.git"
+  },
+  "keywords": [
+    "scrape",
+    "slides",
+    "google_slides"
+  ],
+  "author": "Teodor Kostadinov",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tkostadinov004/prhood/issues"
+  },
+  "homepage": "https://github.com/tkostadinov004/prhood#readme",
+  "dependencies": {
+    "axios": "^1.14.0",
+    "tesseract.js": "^7.0.0"
+  }
+}

@@ -4,6 +4,19 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const puppeteer = require('puppeteer');
 const fs = require('node:fs');
+const fs_promises = require('node:fs/promises');
+const pdf = require('pdf-lib');
+
+async function merge_pdfs(pdfs) {
+    const mergedPdf = await pdf.PDFDocument.create();
+
+	for (let document of pdfs) {
+		const copiedPages = await mergedPdf.copyPages(document, document.getPageIndices());
+		copiedPages.forEach((page) => mergedPdf.addPage(page));    
+	}
+	
+	return await mergedPdf.save();
+}
 
 async function fetch_page_ids(presentation_url) {
     const res = await axios.get(presentation_url);
@@ -27,9 +40,9 @@ async function fetch_page_ids(presentation_url) {
 
 const download_presentation = async function(presentation_url, page_width, page_height, output_dir) {
     const page_ids = await fetch_page_ids(presentation_url);
-    for (let i = 0; i < page_ids.length; i++) {
-        const url = presentation_url + `?slide=id.${page_ids[i]}`;
-        puppeteer
+    const documents = await Promise.all(page_ids.map(id => {
+        const url = presentation_url + `?slide=id.${id}`;
+        return puppeteer
             .launch({
                 defaultViewport: {
                     width: page_width,
@@ -41,11 +54,23 @@ const download_presentation = async function(presentation_url, page_width, page_
                 await page.goto(url);
 
                 fs.mkdirSync(output_dir, {recursive: true});
-                await page.screenshot({ path: output_dir + `/res-${i + 1}.png` });
+                const screenshot_result = await page.screenshot();
+                const pdf_document = await pdf.PDFDocument.create();
+                const pdf_page = pdf_document.addPage([page_width, page_height]);
+                const png_image = await pdf_document.embedPng(screenshot_result);
+                pdf_page.drawImage(png_image, {
+                    x: 0, 
+                    y: 0,
+                    width: page_width,
+                    height: page_height
+                });
                 await browser.close();
+                return pdf_document;
             })
             .catch(err => console.error(err));
-    }
+    }));
+    const merged_result = await merge_pdfs(documents);
+    await fs_promises.writeFile(output_dir + `/result.pdf`, merged_result);
 };
 
 module.exports = {

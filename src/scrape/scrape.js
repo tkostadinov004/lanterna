@@ -71,7 +71,7 @@ const download_presentation = async function(presentation_url, options) {
     const result = new ScrapeResult(merged_result);
 
     if (options.output_path) {
-        result.save_to_file(options.output_path);
+        await result.save_to_file(options.output_path);
     }
     return result;
 };

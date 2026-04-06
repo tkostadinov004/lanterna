@@ -2,7 +2,7 @@
   "name": "lanterna",
   "version": "1.0.0",
   "description": "Google Slides presentation scraper",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -27,5 +27,9 @@
     "pdf-lib": "^1.17.1",
     "puppeteer": "^24.40.0",
     "scribe.js-ocr": "^0.10.1"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.2"
   }
 }

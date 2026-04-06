@@ -3,9 +3,8 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 const puppeteer = require('puppeteer');
-const fs = require('node:fs');
-const fs_promises = require('node:fs/promises');
 const pdf = require('pdf-lib');
+const ScrapeResult = require('./scrape-result');
 
 async function merge_pdfs(pdfs) {
     const mergedPdf = await pdf.PDFDocument.create();
@@ -38,31 +37,30 @@ async function fetch_page_ids(presentation_url) {
     return result;
 }
 
-const download_presentation = async function(presentation_url, page_width, page_height, output_dir) {
+const download_presentation = async function(presentation_url, options) {
     const page_ids = await fetch_page_ids(presentation_url);
     const documents = await Promise.all(page_ids.map(id => {
         const url = presentation_url + `?slide=id.${id}`;
         return puppeteer
             .launch({
                 defaultViewport: {
-                    width: page_width,
-                    height: page_height,
+                    width: options.page_width,
+                    height: options.page_height,
                 },
             })
             .then(async (browser) => {
                 const page = await browser.newPage();
                 await page.goto(url);
 
-                fs.mkdirSync(output_dir, {recursive: true});
                 const screenshot_result = await page.screenshot();
                 const pdf_document = await pdf.PDFDocument.create();
-                const pdf_page = pdf_document.addPage([page_width, page_height]);
+                const pdf_page = pdf_document.addPage([options.page_width, options.page_height]);
                 const png_image = await pdf_document.embedPng(screenshot_result);
                 pdf_page.drawImage(png_image, {
                     x: 0, 
                     y: 0,
-                    width: page_width,
-                    height: page_height
+                    width: options.page_width,
+                    height: options.page_height
                 });
                 await browser.close();
                 return pdf_document;
@@ -70,7 +68,12 @@ const download_presentation = async function(presentation_url, page_width, page_
             .catch(err => console.error(err));
     }));
     const merged_result = await merge_pdfs(documents);
-    await fs_promises.writeFile(output_dir + `/result.pdf`, merged_result);
+    const result = new ScrapeResult(merged_result);
+
+    if (options.output_path) {
+        result.save_to_file(options.output_path);
+    }
+    return result;
 };
 
 module.exports = {

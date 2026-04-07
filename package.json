@@ -1,6 +1,6 @@
 {
   "name": "lanterna",
-  "version": "1.0.3",
+  "version": "1.0.14",
   "description": "Google Slides presentation scraper",
   "main": "index.ts",
   "scripts": {

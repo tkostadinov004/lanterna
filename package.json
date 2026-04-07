@@ -12,8 +12,12 @@
   },
   "keywords": [
     "scrape",
+    "scraper",
     "slides",
-    "google_slides"
+    "google_slides",
+    "presentation",
+    "pdf",
+    "ocr"
   ],
   "author": "Teodor Kostadinov",
   "license": "ISC",

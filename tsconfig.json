@@ -33,7 +33,8 @@
     },
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "preserveSymlinks": true
+    "preserveSymlinks": true,
+    "types": ["@types/jest"]
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
 }

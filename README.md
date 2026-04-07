@@ -51,9 +51,9 @@ This assumes you're using npm as your package manager.
 ## Local setup and tests
 In order to work on `Lanterna`, please ensure you have installed the following:
 
-- **Node.js** provides the runtime needed to run this project. ([Installation instructions](https://nodejs.org/en/download/) - need `v20.0.0` or greater).
-- **NPM** is the package manager used for this project. ([Installation instructions](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)  need `v11.12.1` or greater).
-- **Git** is the SCM used for this project. ([Installation instructions](https://git-scm.com/downloads)
+- **Node.js** provides the runtime needed to run this project. ([Installation instructions](https://nodejs.org/en/download/) - `v20.0.0` or greater is needed).
+- **NPM** is the package manager used for this project. ([Installation instructions](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) - `v11.12.1` or greater is needed).
+- **Git** is the SCM used for this project. ([Installation instructions](https://git-scm.com/downloads))
 
 After doing that, you'll have to clone the project:
 

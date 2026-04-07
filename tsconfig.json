@@ -36,5 +36,5 @@
     "preserveSymlinks": true,
     "types": ["@types/jest"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*"]
 }

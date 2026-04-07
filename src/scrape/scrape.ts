@@ -1,25 +1,13 @@
 'use strict';
 
-import { Browser } from "puppeteer";
 import { PDFDocument } from "pdf-lib";
 import axios from "axios";
 import puppeteer from "puppeteer";
 import * as cheerio from "cheerio";
 
-import { ScrapeOptions } from "./scrape-options";
-import { ScrapeResult } from "./scrape-result";
+import { OutputOptions, ScrapeOptions } from "./options";
+import { ScrapeResult, PagedScrapeResult } from "./scrape-result";
 import * as ocr from "../ocr/ocr"
-
-async function merge_pdfs(pdfs: PDFDocument[]): Promise<Uint8Array> {
-    const mergedPdf = await PDFDocument.create();
-
-	for (let document of pdfs) {
-		const copiedPages = await mergedPdf.copyPages(document, document.getPageIndices());
-		copiedPages.forEach((page) => mergedPdf.addPage(page));    
-	}
-	
-	return mergedPdf.save();
-}
 
 async function fetch_page_ids(presentation_url: string): Promise<string[]> {
     const res = await axios.get(presentation_url);
@@ -43,51 +31,46 @@ async function fetch_page_ids(presentation_url: string): Promise<string[]> {
     return result;
 }
 
-export async function scrape_presentation(presentation_url: string, presentation_name: (string|undefined), options: ScrapeOptions) : Promise<ScrapeResult> {
+export async function scrape_presentation(presentation_url: string, 
+        presentation_name: (string|undefined), 
+        scrape_options: ScrapeOptions,
+        output_options: OutputOptions) : Promise<ScrapeResult> {
     const page_ids = await fetch_page_ids(presentation_url);
 
-    const page_width = options.page_width ?? 1280;
-    const page_height = options.page_height ?? 720;
-    const documents = await Promise.all(page_ids.map(id => {
+    const page_width = scrape_options.page_width ?? 1280;
+    const page_height = scrape_options.page_height ?? 720;
+    const documents : Uint8Array[] = await Promise.all(page_ids.map(async id => {
         const url = presentation_url + `?slide=id.${id}`;
-        return puppeteer
+        const browser = await puppeteer
             .launch({
                 defaultViewport: {
                     width: page_width,
                     height: page_height,
                 },
-            })
-            .then(async (browser: Browser) => {
-                const page = await browser.newPage();
-                await page.goto(url);
-                const screenshot_result = await page.screenshot({type: 'webp', quality: 100});
-                await browser.close();
-
-                const pdf_document = await PDFDocument.create();
-                const pdf_page = pdf_document.addPage([page_width, page_height]);
-                if (options.ocr) {
-                    const ocr_result = await ocr.recognize(screenshot_result, presentation_name);
-                    if (ocr_result) {
-                        return await PDFDocument.load(ocr_result);
-                    }
-                } else {
-                    const png_image = await pdf_document.embedPng(screenshot_result);
-                    pdf_page.drawImage(png_image, {
-                        x: 0, 
-                        y: 0,
-                        width: options.page_width,
-                        height: options.page_height
-                    });
-                }
-                await browser.close();
-                return pdf_document;
             });
+        const page = await browser.newPage();
+        await page.goto(url);
+        const screenshot_result = await page.screenshot({ type: 'webp', quality: 100 });
+        await browser.close();
+        const pdf_document = await PDFDocument.create();
+        const pdf_page = pdf_document.addPage([page_width, page_height]);
+        if (scrape_options.ocr) {
+            const ocr_result = await ocr.recognize(screenshot_result, presentation_name);
+            if (ocr_result) {
+                return (await PDFDocument.load(ocr_result)).save();
+            }
+        } else {
+            const png_image = await pdf_document.embedPng(screenshot_result);
+            pdf_page.drawImage(png_image, {
+                x: 0,
+                y: 0,
+                width: page_width,
+                height: page_height
+            });
+        }
+        return await pdf_document.save();
     }));
-    const merged_result: Uint8Array = await merge_pdfs(documents);
-    const result = new ScrapeResult(merged_result);
 
-    if (options.output_path) {
-        await result.save_to_file(options.output_path);
-    }
-    return result;
+    let result: PagedScrapeResult = new PagedScrapeResult(documents);
+    return output_options.separate ? result : result.merge();
 };

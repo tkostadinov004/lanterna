@@ -8,6 +8,7 @@ import * as cheerio from "cheerio";
 
 import { ScrapeOptions } from "./scrape-options";
 import { ScrapeResult } from "./scrape-result";
+import * as ocr from "../ocr/ocr"
 
 async function merge_pdfs(pdfs: PDFDocument[]): Promise<Uint8Array> {
     const mergedPdf = await PDFDocument.create();
@@ -42,7 +43,7 @@ async function fetch_page_ids(presentation_url: string): Promise<string[]> {
     return result;
 }
 
-export async function scrape_presentation(presentation_url: string, options: ScrapeOptions) : Promise<ScrapeResult> {
+export async function scrape_presentation(presentation_url: string, presentation_name: (string|undefined), options: ScrapeOptions) : Promise<ScrapeResult> {
     const page_ids = await fetch_page_ids(presentation_url);
 
     const page_width = options.page_width ?? 1280;
@@ -59,17 +60,25 @@ export async function scrape_presentation(presentation_url: string, options: Scr
             .then(async (browser: Browser) => {
                 const page = await browser.newPage();
                 await page.goto(url);
+                const screenshot_result = await page.screenshot({type: 'webp', quality: 100});
+                await browser.close();
 
-                const screenshot_result = await page.screenshot();
                 const pdf_document = await PDFDocument.create();
                 const pdf_page = pdf_document.addPage([page_width, page_height]);
-                const png_image = await pdf_document.embedPng(screenshot_result);
-                pdf_page.drawImage(png_image, {
-                    x: 0, 
-                    y: 0,
-                    width: options.page_width,
-                    height: options.page_height
-                });
+                if (options.ocr) {
+                    const ocr_result = await ocr.recognize(screenshot_result, presentation_name);
+                    if (ocr_result) {
+                        return await PDFDocument.load(ocr_result);
+                    }
+                } else {
+                    const png_image = await pdf_document.embedPng(screenshot_result);
+                    pdf_page.drawImage(png_image, {
+                        x: 0, 
+                        y: 0,
+                        width: options.page_width,
+                        height: options.page_height
+                    });
+                }
                 await browser.close();
                 return pdf_document;
             });

@@ -141,3 +141,5 @@ dist
 examples/output
 
 build
+
+*.traineddata

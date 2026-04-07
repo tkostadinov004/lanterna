@@ -18,7 +18,7 @@
       alt="Prettier Badge"
     />
   </a>
-</div>
+</div> 
 
 ## Table of contents
 

@@ -9,6 +9,13 @@ import { OutputOptions, ScrapeOptions } from "./options";
 import { ScrapeResult, PagedScrapeResult } from "./scrape-result";
 import * as ocr from "../ocr/ocr";
 
+/**
+ * Fetches the internal slide IDs from a Google Slides presentation URL by parsing
+ * the viewerData variable embedded in the page's script tags.
+ * * @param {string} presentation_url - The base URL of the presentation to scrape.
+ * @returns {Promise<string[]>} A promise that resolves to an array of slide ID strings.
+ * @throws {Error} May throw errors related to network issues (axios) or script parsing failures.
+ */
 async function fetch_page_ids(presentation_url: string): Promise<string[]> {
   const res = await axios.get(presentation_url);
   const $ = cheerio.load(res.data);
@@ -31,6 +38,17 @@ async function fetch_page_ids(presentation_url: string): Promise<string[]> {
   return result;
 }
 
+/**
+ * Scrapes a presentation by navigating to each slide, taking a screenshot,
+ * and optionally performing OCR before compiling the results into PDF format.
+ * * @param {string} presentation_url - The URL of the presentation.
+ * @param {string | undefined} presentation_name - An optional name for the presentation (used for OCR context).
+ * @param {ScrapeOptions} scrape_options - Configuration for scraping (dimensions, OCR toggle).
+ * @param {OutputOptions} output_options - Configuration for output (whether to merge slides or keep them separate).
+ * @returns {Promise<ScrapeResult>} A promise resolving to a ScrapeResult (either a single PDF or multiple pages).
+ * @throws {Error} Throws "Invalid presentation url!" if no slide IDs are found,
+ * or Puppeteer-related errors during navigation/rendering.
+ */
 export async function scrape_presentation(presentation_url: string, presentation_name: string | undefined, scrape_options: ScrapeOptions, output_options: OutputOptions): Promise<ScrapeResult> {
   const page_ids = await fetch_page_ids(presentation_url);
   if (page_ids.length == 0) {
@@ -58,6 +76,7 @@ export async function scrape_presentation(presentation_url: string, presentation
 
       const pdf_document = await PDFDocument.create();
       const pdf_page = pdf_document.addPage([page_width, page_height]);
+
       if (scrape_options.ocr) {
         const ocr_result = await ocr.recognize(screenshot_result, presentation_name);
         if (ocr_result) {

@@ -2,7 +2,7 @@
 <div align="center">
   <strong>Scrape published or embedded Google Slides presentations in any JavaScript environment.</strong>
 </div>
-<br />
+<br/>
 <div align="center">
   <!-- NPM Version -->
   <a href="https://www.npmjs.com/package/lanterna">

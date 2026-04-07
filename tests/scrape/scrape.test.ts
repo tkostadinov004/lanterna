@@ -43,9 +43,7 @@ describe("scrape_presentation", () => {
   const mock_draw_image = jest.fn();
   const mock_embed_png = jest.fn().mockResolvedValue("mockPngObject");
   const mock_pdf_save = jest.fn().mockResolvedValue(new Uint8Array([1, 2, 3]));
-  const mock_add_page = jest
-    .fn()
-    .mockReturnValue({ drawImage: mock_draw_image });
+  const mock_add_page = jest.fn().mockReturnValue({ drawImage: mock_draw_image });
 
   const mock_load_pdf_doc = {
     save: jest.fn().mockResolvedValue(new Uint8Array([4, 5, 6])),
@@ -95,19 +93,12 @@ describe("scrape_presentation", () => {
   });
 
   it("should scrape successfully without OCR and merge the result", async () => {
-    const result = await scrape_presentation(
-      mock_presentation_url,
-      mock_presentation_name,
-      { page_width: 1000, page_height: 800, ocr: false },
-      { separate: false },
-    );
+    const result = await scrape_presentation(mock_presentation_url, mock_presentation_name, { page_width: 1000, page_height: 800, ocr: false }, { separate: false });
 
     expect(axios.get).toHaveBeenCalledWith(mock_presentation_url);
     expect(puppeteer.launch).toHaveBeenCalledTimes(1);
 
-    expect(mock_page.goto).toHaveBeenCalledWith(
-      `${mock_presentation_url}?slide=id.page_id_1`,
-    );
+    expect(mock_page.goto).toHaveBeenCalledWith(`${mock_presentation_url}?slide=id.page_id_1`);
     expect(mock_page.screenshot).toHaveBeenCalledWith({
       type: "webp",
       quality: 100,
@@ -131,12 +122,7 @@ describe("scrape_presentation", () => {
     const dummy_ocr_result = new Uint8Array([10, 11, 12]);
     (ocr.recognize as jest.Mock).mockResolvedValue(dummy_ocr_result);
 
-    await scrape_presentation(
-      mock_presentation_url,
-      mock_presentation_name,
-      { ocr: true },
-      { separate: true },
-    );
+    await scrape_presentation(mock_presentation_url, mock_presentation_name, { ocr: true }, { separate: true });
 
     expect(ocr.recognize).toHaveBeenCalledTimes(2);
 
@@ -152,13 +138,6 @@ describe("scrape_presentation", () => {
       data: "<html><body>No scripts here</body></html>",
     });
 
-    await expect(
-      scrape_presentation(
-        mock_presentation_url,
-        undefined,
-        { ocr: false },
-        { separate: false },
-      ),
-    ).rejects.toThrow(Error);
+    await expect(scrape_presentation(mock_presentation_url, undefined, { ocr: false }, { separate: false })).rejects.toThrow(Error);
   });
 });

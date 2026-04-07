@@ -21,9 +21,7 @@ async function fetch_page_ids(presentation_url: string): Promise<string[]> {
     }
 
     if (scriptContent.includes("var viewerData")) {
-      const match = scriptContent.match(
-        /var\s+viewerData\s*=\s*(\{[\s\S]*?\});/,
-      );
+      const match = scriptContent.match(/var\s+viewerData\s*=\s*(\{[\s\S]*?\});/);
       if (match) {
         const data = eval("(" + match[1] + ")");
         data.docData[1].forEach((element: string[]) => result.push(element[0]));
@@ -33,12 +31,7 @@ async function fetch_page_ids(presentation_url: string): Promise<string[]> {
   return result;
 }
 
-export async function scrape_presentation(
-  presentation_url: string,
-  presentation_name: string | undefined,
-  scrape_options: ScrapeOptions,
-  output_options: OutputOptions,
-): Promise<ScrapeResult> {
+export async function scrape_presentation(presentation_url: string, presentation_name: string | undefined, scrape_options: ScrapeOptions, output_options: OutputOptions): Promise<ScrapeResult> {
   const page_ids = await fetch_page_ids(presentation_url);
   if (page_ids.length == 0) {
     throw Error("Invalid presentation url!");
@@ -66,10 +59,7 @@ export async function scrape_presentation(
       const pdf_document = await PDFDocument.create();
       const pdf_page = pdf_document.addPage([page_width, page_height]);
       if (scrape_options.ocr) {
-        const ocr_result = await ocr.recognize(
-          screenshot_result,
-          presentation_name,
-        );
+        const ocr_result = await ocr.recognize(screenshot_result, presentation_name);
         if (ocr_result) {
           return (await PDFDocument.load(ocr_result)).save();
         }

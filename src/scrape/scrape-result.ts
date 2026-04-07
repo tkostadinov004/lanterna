@@ -46,10 +46,7 @@ export class PagedScrapeResult implements ScrapeResult {
     const mergedPdf: PDFDocument = await PDFDocument.create();
 
     for (let document of pdfs) {
-      const copiedPages: PDFPage[] = await mergedPdf.copyPages(
-        document,
-        document.getPageIndices(),
-      );
+      const copiedPages: PDFPage[] = await mergedPdf.copyPages(document, document.getPageIndices());
       copiedPages.forEach((page) => mergedPdf.addPage(page));
     }
 
@@ -62,22 +59,14 @@ export class PagedScrapeResult implements ScrapeResult {
       output_dir += "/";
     }
     for (let i = 0; i < this.pdf_documents.length; i++) {
-      await fs_promises.writeFile(
-        output_dir + `${i + 1}.pdf`,
-        this.pdf_documents[i],
-      );
+      await fs_promises.writeFile(output_dir + `${i + 1}.pdf`, this.pdf_documents[i]);
     }
   }
 
   public async merge(order?: number[]): Promise<MergedScrapeResult> {
-    const indices: number[] =
-      order ?? Array.from(Array(this.pdf_documents).keys());
+    const indices: number[] = order ?? Array.from(Array(this.pdf_documents).keys());
 
-    const pages: PDFDocument[] = await Promise.all(
-      indices.map(
-        async (index) => await PDFDocument.load(this.pdf_documents[index]),
-      ),
-    );
+    const pages: PDFDocument[] = await Promise.all(indices.map(async (index) => await PDFDocument.load(this.pdf_documents[index])));
     return new MergedScrapeResult(await this.merge_pdfs(pages));
   }
 }

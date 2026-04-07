@@ -31,11 +31,7 @@ describe("ocr_recognize", () => {
     const result = await recognize(mock_image, "Test Presentation");
 
     expect(createWorker).toHaveBeenCalled();
-    expect(mock_recognize).toHaveBeenCalledWith(
-      expect.any(Buffer),
-      { pdfTitle: "Test Presentation" },
-      { pdf: true },
-    );
+    expect(mock_recognize).toHaveBeenCalledWith(expect.any(Buffer), { pdfTitle: "Test Presentation" }, { pdf: true });
 
     expect(result).toBeInstanceOf(Uint8Array);
     expect(Array.from(result!)).toEqual(mock_pdf_data);
@@ -48,11 +44,7 @@ describe("ocr_recognize", () => {
 
     await recognize(mock_image, undefined);
 
-    expect(mock_recognize).toHaveBeenCalledWith(
-      expect.any(Buffer),
-      { pdfTitle: "Result" },
-      { pdf: true },
-    );
+    expect(mock_recognize).toHaveBeenCalledWith(expect.any(Buffer), { pdfTitle: "Result" }, { pdf: true });
   });
 
   it("should return undefined if tesseract does not produce a pdf field", async () => {
@@ -69,9 +61,7 @@ describe("ocr_recognize", () => {
   it("should terminate the worker even if recognize throws an error", async () => {
     mock_recognize.mockRejectedValue(new Error("Tesseract Failed"));
 
-    await expect(recognize(mock_image, "Title")).rejects.toThrow(
-      "Tesseract Failed",
-    );
+    await expect(recognize(mock_image, "Title")).rejects.toThrow("Tesseract Failed");
 
     expect(mock_terminate).toHaveBeenCalled();
   });
